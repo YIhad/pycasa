@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.List;
 import javax.swing.DefaultListModel;
 import javax.swing.SwingUtilities;
+import pycasa.controller.IfNotificator.MessageType;
 import pycasa.model.Message;
 import pycasa.view.Dialogs;
 

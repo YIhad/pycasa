@@ -14,8 +14,8 @@ import com.google.gdata.data.photos.PhotoEntry;
 import com.google.gdata.util.ServiceException;
 import java.io.IOException;
 import javax.swing.SwingUtilities;
+import pycasa.controller.IfNotificator.MessageType;
 import pycasa.model.Message;
-import pycasa.view.Dialogs;
 
 /**
  *
