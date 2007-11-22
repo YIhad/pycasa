@@ -8,6 +8,7 @@ package pycasa.view;
 
 import com.google.gdata.data.PlainTextConstruct;
 import com.google.gdata.data.photos.PhotoEntry;
+import javax.swing.SwingUtilities;
 import pycasa.controller.Controller;
 import pycasa.controller.IfNotificator.MessageType;
 import pycasa.model.Message;
@@ -109,21 +110,58 @@ public class EditPhoto extends javax.swing.JFrame {
 
     private void b_okActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_b_okActionPerformed
         String desc = t_description.getText();
-        String title = photo.getTitle().getPlainText();
+        final String title = photo.getTitle().getPlainText();
         
         photo.setDescription(new PlainTextConstruct(desc));
         
-        try {
-                controller.message("Updating photo: " + title);
-                photo.update();
-                controller.message("Photo " + title + " updated");
-                mainWindow.loadPhotos(mainWindow.getSelectedAlbum());
-            } catch (Exception ex) {
-                controller.message(new Message(MessageType.ERROR, "Photo " + title + " could not be updated"));
-                ex.printStackTrace();
-            }
+        controller.message("Updating photo: " + title);
         
-        setVisible(false);
+        Runnable r = new Runnable()
+        {
+            public void run()
+            {
+                boolean success;
+                try {
+                    photo.update();
+                    success = true;
+                } catch (Exception ex) {
+                    success = false;
+                    ex.printStackTrace();
+                }
+
+                Runnable update_gui;
+
+                if(success)
+                {
+                    update_gui = new Runnable()
+                    {
+                        public void run()
+                        {
+                            controller.message("Photo " + title + " updated");
+                            mainWindow.loadPhotos(mainWindow.getSelectedAlbum());
+                        }
+                    };
+                }
+                else
+                {
+                    update_gui = new Runnable()
+                    {
+                        public void run()
+                        {
+                            controller.message(new Message(MessageType.ERROR, "Photo " + title + " could not be updated"));
+                        }
+                    };
+                }
+
+                SwingUtilities.invokeLater(update_gui);
+            }
+
+        };
+
+       Thread t = new Thread(r);
+       t.start();
+
+       setVisible(false);
     }//GEN-LAST:event_b_okActionPerformed
     
     

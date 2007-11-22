@@ -12,6 +12,7 @@ import com.google.gdata.util.ServiceException;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import javax.swing.SwingUtilities;
 import pycasa.controller.Controller;
 import pycasa.controller.IfNotificator.MessageType;
 import pycasa.model.Message;
@@ -48,7 +49,7 @@ public class EditAlbum extends javax.swing.JFrame {
             this.t_title.setText(album.getTitle().getPlainText());
             this.t_place.setText(album.getLocation());
             try {
-                this.t_date.setText(album.getDate().toString());
+                this.t_date.setText(new SimpleDateFormat("dd/MM/yyyy").format(album.getDate()));
             } catch (ServiceException ex) {
                 ex.printStackTrace();
             }
@@ -192,7 +193,8 @@ public class EditAlbum extends javax.swing.JFrame {
 
     private void b_okActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_b_okActionPerformed
         
-        String title, place, date, desc;
+        final String title;
+        String place, date, desc;
         
         title = t_title.getText();
         place = t_place.getText();
@@ -208,42 +210,113 @@ public class EditAlbum extends javax.swing.JFrame {
         album.setTitle(new PlainTextConstruct(title));
         album.setDescription(new PlainTextConstruct(desc));
         album.setLocation(place);
+    
         try {
             
             album.setDate((new SimpleDateFormat("dd/MM/yyyy")).parse(date));
         } catch (ParseException ex) {
-            Dialogs.error("Invalid date format");
+            Dialogs.error("Invalid date format (use dd/mm/yyyy)");
             return;
         }
         
         if(edit_mode)
         {
-            try {
-                controller.message("Updating album: " + title);
-                album.update();
-                controller.message("Album " + title + " updated");
-                this.mainWindow.loadAlbums();
-            } catch (Exception ex) {
-                controller.message(new Message(MessageType.ERROR, "Album " + title + " could not be updated"));
-                ex.printStackTrace();
-            }
+            controller.message("Updating album: " + title);
+            
+            Runnable r = new Runnable()
+            {
+                public void run()
+                {
+                    boolean success;
+                    try {
+                        album.update();
+                        success = true;
+                    } catch (Exception ex) {
+                        success = false;
+                        ex.printStackTrace();
+                    }
+                    
+                    Runnable update_gui;
+                    
+                    if(success)
+                    {
+                        update_gui = new Runnable()
+                        {
+                            public void run()
+                            {
+                                controller.message("Album " + title + " updated");
+                                mainWindow.loadAlbums();
+                            }
+                        };
+                    }
+                    else
+                    {
+                        update_gui = new Runnable()
+                        {
+                            public void run()
+                            {
+                                controller.message(new Message(MessageType.ERROR, "Album " + title + " could not be updated"));
+                            }
+                        };
+                    }
+                    
+                    SwingUtilities.invokeLater(update_gui);
+                }
+                
+            };
+           
+           Thread t = new Thread(r);
+           t.start();
         }
         else
         {
             controller.message("Adding album: " + title);
-            
-            try {
-                controller.insertAlbum(album);
-                controller.message("Album " + title + " added");
+
+            Runnable r = new Runnable()
+            {
+                public void run()
+                {
+                    boolean success;
+                    try {
+                        controller.insertAlbum(album);
+                        success = true;
+                    } catch (Exception ex) {
+                        success = false;
+                        ex.printStackTrace();
+                    }
+                    
+                    Runnable update_gui;
+                    
+                    if(success)
+                    {
+                        update_gui = new Runnable()
+                        {
+                            public void run()
+                            {
+                                controller.message("Album " + title + " added");
+                                mainWindow.loadAlbums();
+                            }
+                        };
+                    }
+                    else
+                    {
+                        update_gui = new Runnable()
+                        {
+                            public void run()
+                            {
+                                controller.message(new Message(MessageType.ERROR, "Album " + title + " could not be created"));
+                            }
+                        };
+                    }
+                    
+                    SwingUtilities.invokeLater(update_gui);
+                }
                 
-            } catch (ServiceException ex) {
-                controller.message(new Message(MessageType.ERROR, "Album " + title + " could not be created"));
-                ex.printStackTrace();
-            } catch (IOException ex) {
-                controller.message(new Message(MessageType.ERROR, "Album " + title + " could not be created"));
-                ex.printStackTrace();
-            }
-        }
+            };
+           
+           Thread t = new Thread(r);
+           t.start();
+       }
         
         setVisible(false);
     }//GEN-LAST:event_b_okActionPerformed
