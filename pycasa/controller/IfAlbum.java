@@ -29,4 +29,5 @@ public interface IfAlbum {
     AlbumEntry insertAlbum(AlbumEntry album) throws IOException, ServiceException;
     <T extends GphotoEntry> T insert(GphotoEntry<?> parent, T entry)
       throws IOException, ServiceException;
+    
 }

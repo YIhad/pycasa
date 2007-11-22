@@ -24,6 +24,7 @@ import com.google.gdata.data.photos.UserFeed;
 import com.google.gdata.util.ServiceException;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,8 @@ public class Controller implements IfLogin, IfAlbum, IfNotificator{
     private static final String API_PREFIX
       = "http://picasaweb.google.com/data/feed/api/user/";
 
+    private static final String MEDIA_PREFIX
+      = "http://picasaweb.google.com/data/entry/api/user/";
     private final PicasawebService service;
     
     protected Vector<IfNotificable> notificables;
