@@ -8,12 +8,15 @@ package pycasa.view;
 
 import com.google.gdata.data.photos.AlbumEntry;
 import com.google.gdata.data.photos.PhotoEntry;
+import com.google.gdata.util.ServiceException;
 import java.io.File;
+import java.io.IOException;
 import javax.swing.DefaultListModel;
 import pycasa.controller.AlbumLoader;
 import pycasa.controller.Controller;
 import pycasa.controller.IfNotificable;
 import pycasa.controller.IfNotificator;
+import pycasa.controller.IfNotificator.MessageType;
 import pycasa.controller.PhotoAdder;
 import pycasa.controller.PhotoLoader;
 import pycasa.model.Message;
@@ -63,15 +66,19 @@ public class MainWindow extends javax.swing.JFrame implements IfNotificable {
         info_model.addElement(message);
     }
     
-    private void loadAlbums() {
+    public void loadAlbums() {
         album_model.clear();
         
         Thread t = new Thread(new AlbumLoader(album_model, controller));
         t.start();
     }
     
-    private void loadPhotos(AlbumEntry album) {
+    public void loadPhotos(AlbumEntry album) {
         photo_model.clear();
+        
+        if(album == null)
+            return;
+        
         Thread t = new Thread(new PhotoLoader(photo_model, album, controller));
         t.start();
     }
@@ -350,11 +357,39 @@ public class MainWindow extends javax.swing.JFrame implements IfNotificable {
     }//GEN-LAST:event_list_photoMouseClicked
     
     private void b_photo_editActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_b_photo_editActionPerformed
-// TODO add your handling code here:
+        PhotoEntry photo = getSelectedPhoto();
+        
+        if(photo == null)
+        {
+            this.messageNotification(new Message(MessageType.ERROR, "Photo not selected"));
+            return;
+        }
+        
+        EditPhoto ep = new EditPhoto(controller, this, photo);
+        ep.setVisible(true);
     }//GEN-LAST:event_b_photo_editActionPerformed
     
     private void b_photo_removeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_b_photo_removeActionPerformed
-// TODO add your handling code here:
+        PhotoEntry photo = getSelectedPhoto();
+        
+        if(photo == null)
+        {
+            this.messageNotification(new Message(MessageType.ERROR, "Photo not selected"));
+            return;
+        }
+        
+        int result = Dialogs.confirm("Delete selected image?");
+        
+        if(result == javax.swing.JOptionPane.YES_OPTION)
+        {
+            try {
+                photo.delete();
+                controller.message("Photo " + photo.getTitle().getPlainText() + " deleted");
+            } catch (Exception ex) {
+                controller.message(new Message(MessageType.ERROR, "Photo " + photo.getTitle().getPlainText() + " deletion failed"));
+                ex.printStackTrace();
+            }
+        }
     }//GEN-LAST:event_b_photo_removeActionPerformed
     
     private void b_photo_addActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_b_photo_addActionPerformed
@@ -386,22 +421,51 @@ public class MainWindow extends javax.swing.JFrame implements IfNotificable {
     }//GEN-LAST:event_b_photo_addActionPerformed
     
     private void b_album_editActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_b_album_editActionPerformed
-// TODO add your handling code here:
+        AlbumEntry album = getSelectedAlbum();
+        
+        if(album == null)
+        {
+            this.messageNotification(new Message(MessageType.ERROR, "Album not selected"));
+            return;
+        }
+        
+        EditAlbum ae = new EditAlbum(controller, this, album);
+        ae.setVisible(true);
     }//GEN-LAST:event_b_album_editActionPerformed
     
     private void b_album_removeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_b_album_removeActionPerformed
-// TODO add your handling code here:
+        AlbumEntry album = getSelectedAlbum();
+        
+        if(album == null)
+        {
+            this.messageNotification(new Message(MessageType.ERROR, "Album not selected"));
+            return;
+        }
+        
+        int result = Dialogs.confirm("Delete selected album?");
+        
+        if(result == javax.swing.JOptionPane.YES_OPTION)
+        {
+            try {
+                album.delete();
+                controller.message("Album " + album.getTitle().getPlainText() + " deleted");
+            } catch (Exception ex) {
+                controller.message(new Message(MessageType.ERROR, "Album " + album.getTitle().getPlainText() + " deletion failed"));
+                ex.printStackTrace();
+            }
+        }
     }//GEN-LAST:event_b_album_removeActionPerformed
     
     private void b_album_addActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_b_album_addActionPerformed
-// TODO add your handling code here:
+        EditAlbum ae = new EditAlbum(controller, this);
+        ae.setVisible(true);
     }//GEN-LAST:event_b_album_addActionPerformed
     
     private void formWindowActivated(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowActivated
         
     }//GEN-LAST:event_formWindowActivated
     
-    private AlbumEntry getSelectedAlbum() {
+    public AlbumEntry getSelectedAlbum() {
         int index = list_album.getSelectedIndex();
         
         if(index == -1)

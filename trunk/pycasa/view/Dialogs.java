@@ -52,6 +52,17 @@ public class Dialogs {
         information("Information", message);
     }
     
+    public static int confirm(String message)
+    {
+        return confirm("Confirm dialog", message);
+    }
+    
+    public static int confirm(String title, String message)
+    {
+        return javax.swing.JOptionPane.showConfirmDialog(null, message, title, 
+                javax.swing.JOptionPane.YES_NO_OPTION);
+    }
+    
     public static void main(String []args)
     {
         error("mensaje error");
