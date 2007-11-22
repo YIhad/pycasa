@@ -8,10 +8,9 @@ package pycasa.view;
 
 import com.google.gdata.data.photos.AlbumEntry;
 import com.google.gdata.data.photos.PhotoEntry;
-import com.google.gdata.util.ServiceException;
 import java.io.File;
-import java.io.IOException;
 import javax.swing.DefaultListModel;
+import javax.swing.SwingUtilities;
 import pycasa.controller.AlbumLoader;
 import pycasa.controller.Controller;
 import pycasa.controller.IfNotificable;
@@ -382,13 +381,7 @@ public class MainWindow extends javax.swing.JFrame implements IfNotificable {
         
         if(result == javax.swing.JOptionPane.YES_OPTION)
         {
-            try {
-                photo.delete();
-                controller.message("Photo " + photo.getTitle().getPlainText() + " deleted");
-            } catch (Exception ex) {
-                controller.message(new Message(MessageType.ERROR, "Photo " + photo.getTitle().getPlainText() + " deletion failed"));
-                ex.printStackTrace();
-            }
+            deletePhoto(photo);
         }
     }//GEN-LAST:event_b_photo_removeActionPerformed
     
@@ -446,13 +439,7 @@ public class MainWindow extends javax.swing.JFrame implements IfNotificable {
         
         if(result == javax.swing.JOptionPane.YES_OPTION)
         {
-            try {
-                album.delete();
-                controller.message("Album " + album.getTitle().getPlainText() + " deleted");
-            } catch (Exception ex) {
-                controller.message(new Message(MessageType.ERROR, "Album " + album.getTitle().getPlainText() + " deletion failed"));
-                ex.printStackTrace();
-            }
+            deleteAlbum(album);
         }
     }//GEN-LAST:event_b_album_removeActionPerformed
     
@@ -487,6 +474,117 @@ public class MainWindow extends javax.swing.JFrame implements IfNotificable {
         System.out.println(photo.getTitle().getPlainText());
         System.out.println(photo.getDescription().getPlainText());
     }
+    
+    public void deletePhoto(final PhotoEntry photo)
+    {
+        if(photo == null)
+            return;
+        
+        final String title = photo.getTitle().getPlainText();
+        
+        controller.message("Deleting photo: " + title);
+        
+        Runnable r = new Runnable()
+        {
+            public void run()
+            {
+                boolean success;
+                try {
+                    photo.delete();
+                    success = true;
+                } catch (Exception ex) {
+                    success = false;
+                    ex.printStackTrace();
+                }
+
+                Runnable update_gui;
+
+                if(success)
+                {
+                    update_gui = new Runnable()
+                    {
+                        public void run()
+                        {
+                            controller.message("Photo " + title + " deleted");
+                            loadPhotos(getSelectedAlbum());
+                        }
+                    };
+                }
+                else
+                {
+                    update_gui = new Runnable()
+                    {
+                        public void run()
+                        {
+                            controller.message(new Message(MessageType.ERROR, "Photo " + title + " could not be deleted"));
+                        }
+                    };
+                }
+
+                SwingUtilities.invokeLater(update_gui);
+            }
+
+        };
+
+       Thread t = new Thread(r);
+       t.start();
+    }
+
+    public void deleteAlbum(final AlbumEntry album)
+    {
+        if(album == null)
+            return;
+        
+        final String title = album.getTitle().getPlainText();
+        
+        controller.message("Deleting album: " + title);
+        
+        Runnable r = new Runnable()
+        {
+            public void run()
+            {
+                boolean success;
+                try {
+                    album.delete();
+                    success = true;
+                } catch (Exception ex) {
+                    success = false;
+                    ex.printStackTrace();
+                }
+
+                Runnable update_gui;
+
+                if(success)
+                {
+                    update_gui = new Runnable()
+                    {
+                        public void run()
+                        {
+                            controller.message("Album " + title + " deleted");
+                            loadAlbums();
+                        }
+                    };
+                }
+                else
+                {
+                    update_gui = new Runnable()
+                    {
+                        public void run()
+                        {
+                            controller.message(new Message(MessageType.ERROR, "Album " + title + " could not be deleted"));
+                        }
+                    };
+                }
+
+                SwingUtilities.invokeLater(update_gui);
+            }
+
+        };
+
+       Thread t = new Thread(r);
+       t.start();
+    }
+
     
     private void list_albumMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_list_albumMouseClicked
         AlbumEntry album = getSelectedAlbum();

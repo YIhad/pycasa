@@ -42,7 +42,7 @@
                   <Component id="b_ok" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="b_cancel" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace max="32767" attributes="0"/>
+              <EmptySpace pref="13" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
