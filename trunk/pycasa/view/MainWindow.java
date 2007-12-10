@@ -9,6 +9,7 @@ package pycasa.view;
 import com.google.gdata.data.photos.AlbumEntry;
 import com.google.gdata.data.photos.PhotoEntry;
 import java.io.File;
+import java.util.Vector;
 import javax.swing.DefaultListModel;
 import javax.swing.SwingUtilities;
 import pycasa.controller.AlbumLoader;
@@ -395,6 +396,8 @@ public class MainWindow extends javax.swing.JFrame implements IfNotificable {
             return;
         }
         
+        Vector <PhotoEntry>photos = new Vector<PhotoEntry>();
+        
         for(File file: files) {
             if(file.isDirectory())
                 continue;
@@ -407,10 +410,12 @@ public class MainWindow extends javax.swing.JFrame implements IfNotificable {
                         "Error sending photo " + photo.getTitle().getPlainText()));
                 continue;
             }
-                        
-            Thread t = new Thread(new PhotoAdder(album, photo, controller));
-            t.start();
+            
+            photos.add(photo);
         }
+        
+        Thread t = new Thread(new PhotoAdder(album, photos, controller));
+        t.start();
     }//GEN-LAST:event_b_photo_addActionPerformed
     
     private void b_album_editActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_b_album_editActionPerformed

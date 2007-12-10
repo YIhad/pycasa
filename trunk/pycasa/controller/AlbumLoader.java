@@ -14,9 +14,7 @@ import com.google.gdata.util.ServiceException;
 import java.io.IOException;
 import java.util.List;
 import javax.swing.DefaultListModel;
-import javax.swing.SwingUtilities;
 import pycasa.controller.IfNotificator.MessageType;
-import pycasa.model.Message;
 
 /**
  *
@@ -34,31 +32,26 @@ public class AlbumLoader implements Runnable{
     public void run()
     {
         final List<AlbumEntry> albums;
-        controller.message(new Message(MessageType.INFORMATION, "Loading Albums"));
+        Notification.send(new Notification(controller, MessageType.INFORMATION, 
+                "Loading Albums"));
         try {
             albums = controller.getAlbums();
         } catch (ServiceException ex) {
-            controller.message(new Message(MessageType.ERROR, "Error fetching albums"));
+            Notification.send(new Notification(controller, MessageType.ERROR, 
+                    "Error fetching albums"));
             System.err.println(ex.toString());
             ex.printStackTrace();
             return;
         } catch (IOException ex) {
-            controller.message(new Message(MessageType.ERROR, "Error fetching albums"));
+            Notification.send(new Notification(controller, MessageType.ERROR, 
+                    "Error fetching albums"));
             System.err.println(ex.toString());
             ex.printStackTrace();
             return;
         }
         
-        Runnable r = new Runnable()
-        {
-            public void run()
-            {
-                for(AlbumEntry album: albums)
-                    model.addElement(album);
-                controller.message(new Message(MessageType.INFORMATION, "Albums loaded"));
-            }
-        };
-        
-        SwingUtilities.invokeLater(r);
+        for(AlbumEntry album: albums)
+            model.addElement(album);
+        Notification.send(new Notification(controller, "Albums loaded"));
     }
 }
