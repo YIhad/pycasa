@@ -15,10 +15,7 @@ import com.google.gdata.util.ServiceException;
 import java.io.IOException;
 import java.util.List;
 import javax.swing.DefaultListModel;
-import javax.swing.SwingUtilities;
 import pycasa.controller.IfNotificator.MessageType;
-import pycasa.model.Message;
-import pycasa.view.Dialogs;
 
 /**
  *
@@ -39,32 +36,25 @@ public class PhotoLoader implements Runnable{
     public void run()
     {
         final List<PhotoEntry> photos;
-        controller.message(new Message(MessageType.INFORMATION, "Loading photos"));
+        Notification.send(new Notification(controller, MessageType.INFORMATION, "Loading photos"));
         try {
             photos = controller.getPhotos(album);
         } catch (ServiceException ex) {
-            Dialogs.error("Could not fetch photos");
+            Notification.send(new Notification(controller, 
+                    MessageType.ERROR, "Could not fetch photos"));
             ex.printStackTrace();
             return;
         } catch (IOException ex) {
-            Dialogs.error("Could not fetch photos");
+            Notification.send(new Notification(controller, 
+                    MessageType.ERROR, "Could not fetch photos"));
             ex.printStackTrace();
             return;
         }
         
-        Runnable r = new Runnable()
-        { 
-            public void run()
-            {
-                
-                for(PhotoEntry photo: photos)
-                    model.addElement(photo);
-                controller.message(new Message(MessageType.INFORMATION, "Photos loaded"));
-            }
-         };
-     
-         SwingUtilities.invokeLater(r);
-      
+        for(PhotoEntry photo: photos)
+            model.addElement(photo);
+        
+        Notification.send(new Notification(controller, MessageType.INFORMATION, "Photos loaded"));
     }
     
 }

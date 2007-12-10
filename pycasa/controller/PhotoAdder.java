@@ -13,9 +13,8 @@ import com.google.gdata.data.photos.AlbumEntry;
 import com.google.gdata.data.photos.PhotoEntry;
 import com.google.gdata.util.ServiceException;
 import java.io.IOException;
-import javax.swing.SwingUtilities;
+import java.util.Vector;
 import pycasa.controller.IfNotificator.MessageType;
-import pycasa.model.Message;
 
 /**
  *
@@ -23,38 +22,37 @@ import pycasa.model.Message;
  */
 public class PhotoAdder implements Runnable {
     protected AlbumEntry album;
-    protected PhotoEntry photo;
+    protected Vector<PhotoEntry> photos;
     protected Controller controller;
     /** Creates a new instance of PhotoAdder */
-    public PhotoAdder(AlbumEntry album, PhotoEntry photo, Controller controller) {
-        this.photo = photo;
+    public PhotoAdder(AlbumEntry album, Vector<PhotoEntry> photos, Controller controller) {
+        this.photos = photos;
         this.album = album;
         this.controller = controller;
     }
     
     public void run()
     {
-        String title = photo.getTitle().getPlainText();
-        
-        try {
-            controller.insert(album, photo);
-            
-            Runnable notify = new Runnable()
-            {
-                public void run()
-                {
-                    String s = "Photo " + PhotoAdder.this.photo.getTitle().getPlainText() + " uploaded";
-                    MessageType t = MessageType.MESSAGE;
-                    controller.message(new Message(t, s));
-                }
-            };
-            
-            SwingUtilities.invokeLater(notify);
-        } catch (ServiceException ex) {
-            controller.message(new Message(MessageType.ERROR, "Could not upload photo: " + photo.getTitle().getPlainText()));
-        } catch (IOException ex) {
-            controller.message(new Message(MessageType.ERROR, "Could not upload photo: " + photo.getTitle().getPlainText()));
+        for(PhotoEntry photo:photos)
+        {
+            String title = photo.getTitle().getPlainText();
+
+            try {
+                controller.insert(album, photo);
+                
+                Notification.send(new Notification(controller, 
+                        MessageType.MESSAGE,
+                        "Photo " + title + " uploaded"));
+            } catch (ServiceException ex) {
+                Notification.send(new Notification(controller, 
+                        MessageType.ERROR, "Could not upload photo: " + title));
+            } catch (IOException ex) {
+                Notification.send(new Notification(controller, 
+                        MessageType.ERROR, "Could not upload photo: " + title));
+            }
         }
+        
+        Notification.send(new Notification(controller, "Upload finished"));
     }
     
 }
